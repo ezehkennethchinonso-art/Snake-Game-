@@ -59,7 +59,7 @@
 <body>
 
     <h1>Snake Game</h1>
-    <div id="score-board">Score: <span id="score">0</span></div>
+    <div id="score-board">Score: <span id="score">0</span>| High Score: <span id="high-score">0</span></div>
     <canvas id="game-canvas" width="400" height="400"></canvas>
     <div class="controls-hint">Use <b>Arrow Keys</b> or <b>WASD</b> to steer. Press <b>Spacebar</b> to restart.</div>
 
@@ -67,6 +67,10 @@
         const canvas = document.getElementById("game-canvas");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("score");
+        const highScoreElement = document.getElementById("high-score");
+        let highScore = localStorage.getItem("snakeHighScore") || 0;
+        highScoreElement.textContent = highScore;
+
 
         // Grid configurations
         const gridSize = 20;
@@ -82,7 +86,7 @@
         let gameInterval;
 
         // Audio placeholders (Optional additions for later context)
-        const gameSpeed = 150; // updates every 100ms
+        const gameSpeed = 200; // updates every 100ms
 
         function main() {
             if (hasGameEnded()) {
@@ -132,6 +136,8 @@
             const head = { x: snake[0].x + dx, y: snake[0].y + dy };
             snake.unshift(head);
 
+
+
             // Handle snack consumption
             const hasEatenFood = snake[0].x === food.x && snake[0].y === food.y;
             if (hasEatenFood) {
@@ -140,6 +146,17 @@
                 generateFood();
             } else {
                 snake.pop(); // Remove tail if it hasn't eaten food to preserve body length
+            }
+            if(hasEatenFood) {
+                score += 10;
+                scoreElement.textContent = score;
+                //Check and update high score 
+                if(score > highScore) {
+                    highScore = score;
+                    localStorage.setItem("snakeHighScore",highScore);
+                    highScoreElement.textContent = highScore;
+                }
+                generateFood();
             }
         }
 

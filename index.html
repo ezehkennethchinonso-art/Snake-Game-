@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Classic Snake Game</title>
+    <style>
+        body {
+            background-color: #1e1e24;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-image: linear-gradient(365deg,blue,red,blue,red);
+            background-size: 400% 400%;
+            animation: movecolor 3s ease-in infinite;
+        }
+
+        @keyframes movecolor {
+            0%{
+                background-position: 0% 50%;
+            }
+            50%{
+                background-position: 100% 50%;
+            }
+            100%{
+                background-position: 0% 50%;
+            }
+        }
+
+        h1 {
+            margin-bottom: 10px;
+        }
+
+        #score-board {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        #game-canvas {
+            border: 4px solid red;
+            background-color: #111116;
+            box-shadow: 0 10px 20px rgba(102, 91, 91, 0.5);
+        }
+
+        .controls-hint {
+            margin-top: 15px;
+            font-size: 14px;
+            color: #8a8a9a;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Snake Game</h1>
+    <div id="score-board">Score: <span id="score">0</span></div>
+    <canvas id="game-canvas" width="400" height="400"></canvas>
+    <div class="controls-hint">Use <b>Arrow Keys</b> or <b>WASD</b> to steer. Press <b>Spacebar</b> to restart.</div>
+
+    <script>
+        const canvas = document.getElementById("game-canvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        // Grid configurations
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+
+        // Game states
+        let snake = [{ x: 10, y: 10 }];
+        let food = { x: 5, y: 5 };
+        let dx = 1; // horizontal velocity
+        let dy = 0; // vertical velocity
+        let score = 0;
+        let gameOver = false;
+        let gameInterval;
+
+        // Audio placeholders (Optional additions for later context)
+        const gameSpeed = 150; // updates every 100ms
+
+        function main() {
+            if (hasGameEnded()) {
+                gameOver = true;
+                drawGameOver();
+                clearInterval(gameInterval);
+                return;
+            }
+
+            clearCanvas();
+            drawFood();
+            moveSnake();
+            drawSnake();
+        }
+
+        // Start the continuous game loop
+        function startGame() {
+            clearInterval(gameInterval);
+            snake = [{ x: 10, y: 10 }];
+            generateFood();
+            dx = 1;
+            dy = 0;
+            score = 0;
+            scoreElement.textContent = score;
+            gameOver = false;
+            gameInterval = setInterval(main, gameSpeed);
+        }
+
+        function clearCanvas() {
+            ctx.fillStyle = "#111116";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+
+        function drawSnake() {
+            ctx.fillStyle = "#4caf50o"; // Snake body color
+            snake.forEach((part, index) => {
+                // Give the head a slightly different accent color
+                if (index === 0) ctx.fillStyle = "#81c784";
+                else ctx.fillStyle = "#4caf50";
+
+                ctx.fillRect(part.x * gridSize, part.y * gridSize, gridSize - 2, gridSize - 2);
+            });
+        }
+
+        function moveSnake() {
+            // Create a temporary new head tracking direction
+            const head = { x: snake[0].x + dx, y: snake[0].y + dy };
+            snake.unshift(head);
+
+            // Handle snack consumption
+            const hasEatenFood = snake[0].x === food.x && snake[0].y === food.y;
+            if (hasEatenFood) {
+                score += 10;
+                scoreElement.textContent = score;
+                generateFood();
+            } else {
+                snake.pop(); // Remove tail if it hasn't eaten food to preserve body length
+            }
+        }
+
+        function drawFood() {
+            ctx.fillStyle = "#ff5722"; // Food color
+            ctx.fillRect(food.x * gridSize, food.y * gridSize, gridSize - 2, gridSize - 2);
+        }
+
+        function generateFood() {
+            food.x = Math.floor(Math.random() * tileCount);
+            food.y = Math.floor(Math.random() * tileCount);
+
+            // Ensure food does not spawn inside the snake's body
+            snake.forEach(part => {
+                const hasEaten = part.x === food.x && part.y === food.y;
+                if (hasEaten) generateFood();
+            });
+        }
+
+        function hasGameEnded() {
+            // Self-collision boundary check
+            for (let i = 4; i < snake.length; i++) {
+                if (snake[i].x === snake[0].x && snake[i].y === snake[0].y) return true;
+            }
+
+            // Wall collision boundary checks
+            const hitLeftWall = snake[0].x < 0;
+            const hitRightWall = snake[0].x >= tileCount;
+            const hitToptWall = snake[0].y < 0;
+            const hitBottomWall = snake[0].y >= tileCount;
+
+            return hitLeftWall || hitRightWall || hitToptWall || hitBottomWall;
+        }
+
+        function drawGameOver() {
+            ctx.fillStyle = "rgba(0, 0, 0, 0.75)";
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = "white";
+            ctx.font = "30px sans-serif";
+            ctx.textAlign = "center";
+            ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 10);
+
+            ctx.font = "16px sans-serif";
+            ctx.fillText("Press Spacebar to Play Again", canvas.width / 2, canvas.height / 2 + 20);
+        }
+
+        // Process inputs for direction updates mapping WASD + Arrows
+        function changeDirection(event) {
+            const keyPressed = event.keyCode;
+
+            const LEFT_KEY = 37;
+            const UP_KEY = 38;
+            const RIGHT_KEY = 39;
+            const DOWN_KEY = 40;
+
+            const A_KEY = 65;
+            const W_KEY = 87;
+            const D_KEY = 68;
+            const S_KEY = 83;
+            const SPACE_KEY = 32;
+
+            if (keyPressed === SPACE_KEY && gameOver) {
+                startGame();
+                return;
+            }
+
+            const goingUp = dy === -1;
+            const goingDown = dy === 1;
+            const goingRight = dx === 1;
+            const goingLeft = dx === -1;
+
+            if ((keyPressed === LEFT_KEY || keyPressed === A_KEY) && !goingRight) {
+                dx = -1;
+                dy = 0;
+            }
+            if ((keyPressed === UP_KEY || keyPressed === W_KEY) && !goingDown) {
+                dx = 0;
+                dy = -1;
+            }
+            if ((keyPressed === RIGHT_KEY || keyPressed === D_KEY) && !goingLeft) {
+                dx = 1;
+                dy = 0;
+            }
+            if ((keyPressed === DOWN_KEY || keyPressed === S_KEY) && !goingUp) {
+                dx = 0;
+                dy = 1;
+            }
+        }
+
+        document.addEventListener("keydown", changeDirection);
+
+        // Boot up game sequence natively
+        startGame();
+    </script>
+</body>
+
+</html>

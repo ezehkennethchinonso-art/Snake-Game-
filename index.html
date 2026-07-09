@@ -16,7 +16,7 @@
             justify-content: center;
             height: 100vh;
             margin: 0;
-            background-image: linear-gradient(365deg,blue,red,blue,red);
+            background-image: linear-gradient(365deg,black,rgba(141, 47, 47, 0.676));
             background-size: 400% 400%;
             animation: movecolor 3s ease-in infinite;
         }
@@ -24,7 +24,7 @@
         @keyframes movecolor {
             0%{
                 background-position: 0% 50%;
-            }
+            
             50%{
                 background-position: 100% 50%;
             }
@@ -43,7 +43,7 @@
         }
 
         #game-canvas {
-            border: 4px solid red;
+            border: 4px solid rgb(134, 55, 55);
             background-color: #111116;
             box-shadow: 0 10px 20px rgba(102, 91, 91, 0.5);
         }
@@ -53,21 +53,34 @@
             font-size: 14px;
             color: #8a8a9a;
         }
+        .play{
+            width:100px;
+            height:40px;
+            cursor: pointer;
+            background: linear-gradient(135deg,wheat,brown);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.4);
+            transition: transform 0.2s ease, background 0.3s ease;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        
     </style>
 </head>
 
 <body>
 
     <h1>Snake Game</h1>
-    <div id="score-board">Score: <span id="score">0</span>| High Score: <span id="high-score">0</span></div>
+    <div id="score-board">Score: <span id="score">0</span> | High Score: <span id="high-score">0</span></div>
     <canvas id="game-canvas" width="400" height="400"></canvas>
     <div class="controls-hint">Use <b>Arrow Keys</b> or <b>WASD</b> to steer. Press <b>Spacebar</b> to restart.</div>
+    <button class="play" id="play-btn">PLAY</button>
 
     <script>
         const canvas = document.getElementById("game-canvas");
         const ctx = canvas.getContext("2d");
         const scoreElement = document.getElementById("score");
         const highScoreElement = document.getElementById("high-score");
+        const playBtn = document.getElementById("play-btn");
         let highScore = localStorage.getItem("snakeHighScore") || 0;
         highScoreElement.textContent = highScore;
 
@@ -113,7 +126,9 @@
             scoreElement.textContent = score;
             gameOver = false;
             gameInterval = setInterval(main, gameSpeed);
+            playBtn.style.display = "none";
         }
+        playBtn.addEventListener("click",startGame);
 
         function clearCanvas() {
             ctx.fillStyle = "#111116";
@@ -202,6 +217,7 @@
 
             ctx.font = "16px sans-serif";
             ctx.fillText("Press Spacebar to Play Again", canvas.width / 2, canvas.height / 2 + 20);
+            playBtn.style.display = "block";
         }
 
         // Process inputs for direction updates mapping WASD + Arrows
@@ -250,7 +266,7 @@
         document.addEventListener("keydown", changeDirection);
 
         // Boot up game sequence natively
-        startGame();
+        // startGame();
     </script>
 </body>
 
